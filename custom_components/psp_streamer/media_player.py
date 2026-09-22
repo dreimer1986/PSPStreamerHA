@@ -18,6 +18,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class Player(CoordinatorEntity, MediaPlayerEntity):
+    _attr_media_image_remotely_accessible = False
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE |
@@ -59,6 +60,16 @@ class Player(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_album_name(self):
         return self.coordinator.data.get('album') or None
+
+    @property
+    def media_image_url(self):
+        path = (self.coordinator.data.get('artwork') or {}).get('cover')
+        return self.coordinator.api.url+path if isinstance(path, str) and path.startswith('/api/artwork/') else None
+
+    async def async_get_media_image(self):
+        # HA exposes its own signed image URL to dashboards. The server
+        # password stays between this integration and PSPStreamer.
+        return await self.coordinator.api.image((self.coordinator.data.get('artwork') or {}).get('cover'))
 
     @property
     def media_duration(self):

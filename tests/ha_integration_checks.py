@@ -24,6 +24,21 @@ from psp_streamer.server import AppServer, Library
 
 
 class IntegrationTests(unittest.IsolatedAsyncioTestCase):
+    async def test_authenticated_media_artwork_and_missing_image(self):
+        path = '/api/artwork/plex.42.0123456789ab/cover?v=1234'
+        self.server.player_status.remember('episode', {'name':'Episode','artwork':{'cover':path}}, 'video')
+        self.server.player_status.report({'media':['episode'], 'state':['playing']})
+        coordinator = PlayerCoordinator(self.hass, None, self.api)
+        coordinator.data = await coordinator._async_update_data()
+        player = Player(coordinator)
+        self.assertEqual(player.media_image_url, self.url+path)
+        self.assertFalse(player.media_image_remotely_accessible)
+        with patch.object(self.server.plex.artwork, 'get', return_value=(b'JPEG','image/jpeg')):
+            self.assertEqual(await player.async_get_media_image(), (b'JPEG','image/jpeg'))
+            self.assertEqual(await Api(self.session,self.url,'wrong').image(path), (None,None))
+        self.assertEqual(await self.api.image('https://evil.invalid/image'), (None,None))
+        self.assertEqual(await player.async_get_media_image(), (None,None))
+
     async def asyncSetUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

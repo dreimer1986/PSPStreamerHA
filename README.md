@@ -29,6 +29,10 @@ Do not add this repository to Home Assistant's app/add-on store.
 - Confirmed playing, paused, buffering and idle state, with available metadata.
 - Play/resume, pause, stop, seek and previous/next item.
 - Media browser for enabled Files, Plex, Jellyfin and Radio sources.
+- Current Plex/Jellyfin episode thumbnails and album covers in the media-player
+  entity and dashboard. Requires PSPStreamer server/add-on 0.1.46 or newer.
+  Home Assistant fetches images with the configured server password and serves
+  them through its own image proxy; credentials are never embedded in image URLs.
 - URL/password configuration, reconfiguration and German/English setup texts.
 - No MQTT, extra PSP polling thread or changes to A/V synchronization.
 
