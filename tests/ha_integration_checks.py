@@ -40,6 +40,9 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(await self.api.image(variant), (b'JPEG','image/jpeg'))
             self.assertEqual(await self.api.image(path.replace('/cover', '~invalid/cover')), (None,None))
         self.assertEqual(await self.api.image('https://evil.invalid/image'), (None,None))
+        with patch.object(self.server.dlna.artwork, 'get', return_value=(b'PNG','image/png')):
+            self.assertEqual(await self.api.image('/api/artwork/dlna.0123456789abcdef.YS1i_-0.MA/cover?v=1234'),
+                             (b'PNG','image/png'))
         self.assertEqual(await player.async_get_media_image(), (None,None))
 
     async def asyncSetUp(self):

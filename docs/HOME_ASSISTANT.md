@@ -56,7 +56,8 @@ select the version before playing. Its media ID is passed unchanged, including
 the version suffix. External subtitles follow the selected original and use
 the same `extra.subtitle` track index as in the server API. HA's standard media
 browser has no track-selection dialog: use the web UI or an automation for this.
-DLNA artwork and provider-specific watched reporting are not promised.
+DLNA covers supplied through `albumArtURI` work with server 0.1.52 and integration
+0.1.3. DLNA backdrops and provider-specific watched reporting are not promised.
 
 The HA server app uses host networking from 0.1.51 for DLNA discovery. If this
 integration previously connected by a container-only DNS name, reconfigure it

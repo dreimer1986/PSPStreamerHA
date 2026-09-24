@@ -59,7 +59,7 @@ class Api:
     async def image(self, path):
         # Only our server's image route; never forward the password to a URL
         # from an upstream metadata field or an HTTP redirect.
-        if not isinstance(path, str) or not re.fullmatch(r'/api/artwork/[a-zA-Z0-9.]+(?:~[0-9a-f]{16})?/(?:cover|backdrop)(?:\?v=[0-9a-f]+)?', path):
+        if not isinstance(path, str) or not re.fullmatch(r'/api/artwork/[a-zA-Z0-9._-]+(?:~[0-9a-f]{16})?/(?:cover|backdrop)(?:\?v=[0-9a-f]+)?', path):
             return None, None
         try:
             async with self.session.get(self.url+path, headers=self.headers, allow_redirects=False,

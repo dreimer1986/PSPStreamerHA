@@ -47,6 +47,12 @@ media IDs. When updating the HA server app to host networking, keep using its
 host IP/domain and configured port; change any former container-only DNS address
 through this integration's **Reconfigure** menu. No new entity is needed.
 
+Integration **0.1.3** also accepts DLNA cover identifiers from server **0.1.52**.
+When the DLNA source supplies `albumArtURI`, its current-media cover appears
+through the same authenticated image proxy. Missing covers stay empty; this
+does not imply DLNA backdrop or watched-state support. PSP-side timers,
+bookmarks, favorites and connection profiles do not require new HA entities.
+
 ## Development
 
 The integration is self-contained at runtime. The existing integration checks
