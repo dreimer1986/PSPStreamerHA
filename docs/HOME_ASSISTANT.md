@@ -48,7 +48,20 @@ The `media_player` provides:
 - Title and available artist/album metadata, including radio title updates.
 - Play/resume, pause, stop and seeking in non-live media.
 - Previous/next item in the active server folder or provider sequence.
-- A media browser for the server's enabled Files, Plex, Jellyfin and Radio sources.
+- A media browser for the server's enabled Files, Plex, Jellyfin, DLNA and Radio sources.
+
+With server 0.1.51+, DLNA devices registered in the server web UI appear in the
+same browser. Plex/Jellyfin items with multiple originals open as version folders;
+select the version before playing. Its media ID is passed unchanged, including
+the version suffix. External subtitles follow the selected original and use
+the same `extra.subtitle` track index as in the server API. HA's standard media
+browser has no track-selection dialog: use the web UI or an automation for this.
+DLNA artwork and provider-specific watched reporting are not promised.
+
+The HA server app uses host networking from 0.1.51 for DLNA discovery. If this
+integration previously connected by a container-only DNS name, reconfigure it
+with the HA host address and the server app's **port** option. Existing host-IP
+or reverse-proxy URLs remain usable when they route to that address.
 
 A simple dashboard card (use the entity ID created in your installation):
 

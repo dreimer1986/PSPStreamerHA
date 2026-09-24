@@ -28,7 +28,11 @@ Do not add this repository to Home Assistant's app/add-on store.
 
 - Confirmed playing, paused, buffering and idle state, with available metadata.
 - Play/resume, pause, stop, seek and previous/next item.
-- Media browser for enabled Files, Plex, Jellyfin and Radio sources.
+- Media browser for enabled Files, Plex, Jellyfin, DLNA and Radio sources.
+  DLNA and Plex/Jellyfin original-version folders require server 0.1.51+.
+  Register DLNA servers in the server web UI; they then appear here automatically.
+  Selected versions retain their identity when played from HA. External subtitles
+  use the server's track indices via `extra.subtitle`, like embedded tracks.
 - Current Plex/Jellyfin episode thumbnails and album covers in the media-player
   entity and dashboard. Requires PSPStreamer server/add-on 0.1.46 or newer.
   Home Assistant fetches images with the configured server password and serves
@@ -37,6 +41,11 @@ Do not add this repository to Home Assistant's app/add-on store.
 - No MQTT, extra PSP polling thread or changes to A/V synchronization.
 
 See the [complete setup guide and limitations](docs/HOME_ASSISTANT.md).
+
+Integration 0.1.2 also accepts authenticated cover images for version-specific
+media IDs. When updating the HA server app to host networking, keep using its
+host IP/domain and configured port; change any former container-only DNS address
+through this integration's **Reconfigure** menu. No new entity is needed.
 
 ## Development
 

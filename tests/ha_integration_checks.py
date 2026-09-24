@@ -36,6 +36,9 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(self.server.plex.artwork, 'get', return_value=(b'JPEG','image/jpeg')):
             self.assertEqual(await player.async_get_media_image(), (b'JPEG','image/jpeg'))
             self.assertEqual(await Api(self.session,self.url,'wrong').image(path), (None,None))
+            variant = path.replace('/cover', '~0123456789abcdef/cover')
+            self.assertEqual(await self.api.image(variant), (b'JPEG','image/jpeg'))
+            self.assertEqual(await self.api.image(path.replace('/cover', '~invalid/cover')), (None,None))
         self.assertEqual(await self.api.image('https://evil.invalid/image'), (None,None))
         self.assertEqual(await player.async_get_media_image(), (None,None))
 
@@ -105,6 +108,47 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         command = self.server.remote_after(0)
         self.assertEqual(command['kind'], 'audio')
         self.assertEqual(command['audio_quality'], 'v5')
+
+    async def test_dlna_and_original_versions_browse_and_play(self):
+        self.server.player_status.report({})
+        coordinator = PlayerCoordinator(self.hass, None, self.api)
+        coordinator.data = await coordinator._async_update_data()
+        coordinator.last_update_success = True
+        coordinator.async_request_refresh = AsyncMock()
+        player = Player(coordinator)
+        device = 'd'*16
+        self.server.dlna.config.update(enabled=True, devices={device:{
+            'url':'http://example.invalid/root.xml','name':'Test NAS'}})
+        root = await player.async_browse_media()
+        self.assertIn('DLNA', [c.title for c in root.children])
+        devices = await player.async_browse_media(FOLDER, json.dumps([0, ':dlna:']))
+        row = {'id':'track','parent':'0','folder':False,'name':'Music',
+               'resources':[{'url':'http://example.invalid/track.mp3','mime':'audio/mpeg'}]}
+        with patch.object(self.server.dlna, 'rows', return_value=([row], 1)):
+            folder = await player.async_browse_media(FOLDER, devices.children[0].media_content_id)
+            song = folder.children[0]
+            await player.async_play_media(DOMAIN, song.media_content_id)
+            self.assertEqual(self.server.remote_after(0)['kind'], 'audio')
+            self.assertEqual(self.server.remote_after(0)['id'], song.media_content_id)
+        self.server.plex.config.update(enabled=True, token='test', url='http://example.invalid')
+        self.server.jellyfin.config.update(enabled=True, token='test', url='http://example.invalid', user='a'*32)
+        cases = [(self.server.plex, self.server.plex.token('42'),
+                  {'ratingKey':'42','type':'episode','Media':[{'id':1,'container':'mkv','Part':[{'key':'/library/parts/1/file.mkv'}]},
+                                            {'id':2,'container':'mkv','Part':[{'key':'/library/parts/2/file.mkv'}]}]}),
+                 (self.server.jellyfin, self.server.jellyfin.token('b'*32),
+                  {'Id':'b'*32,'Type':'Episode','MediaSources':[
+                      {'Id':'c'*32,'Path':'/tv/first.mkv'}, {'Id':'d'*32,'Path':'/tv/second.mkv'}]})]
+        for provider, token, metadata in cases:
+            with self.subTest(provider=provider.art_provider), patch.object(provider, 'metadata', return_value=metadata):
+                folder = await player.async_browse_media(FOLDER, json.dumps([0, ':versions:'+token]))
+                self.assertEqual(len(folder.children), 2)
+                chosen = folder.children[1].media_content_id
+                self.assertIn('~', chosen)
+                await player.async_play_media(DOMAIN, chosen, extra={'audio':1,'subtitle':3})
+                command = self.server.remote_after(0)
+                self.assertEqual(command['id'], chosen)
+                self.assertEqual(command['subtitle'], 3)
+                self.assertEqual(command['audio'], 1)
 
     async def test_config_flow_connect_and_auth_failure(self):
         flow = ConfigFlow()
